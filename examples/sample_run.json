@@ -1,0 +1,35 @@
+{
+  "policy": {
+    "name": "strict-default",
+    "max_steps": 30,
+    "blocked_tools": ["shell.exec"],
+    "approval_required_tools": ["wire_transfer"],
+    "allowed_models": ["gpt-4o-mini"],
+    "max_total_cost_usd": 0.5,
+    "fail_on_missing_model": true
+  },
+  "run": {
+    "run_id": "run-42",
+    "workflow_name": "invoice-review",
+    "steps": [
+      {
+        "node": "planner",
+        "model": "gpt-4o-mini",
+        "input_tokens": 120,
+        "output_tokens": 90,
+        "cost_usd": 0.01
+      },
+      {
+        "node": "executor",
+        "tool": "wire_transfer",
+        "model": "gpt-4o-mini",
+        "input_tokens": 90,
+        "output_tokens": 44,
+        "cost_usd": 0.02,
+        "requires_human_approval": true,
+        "approved_by": "risk.officer"
+      }
+    ]
+  },
+  "include_advice": false
+}
