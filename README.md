@@ -1,7 +1,22 @@
 # LangGraph Governance Lab
 
-Mission
-> Build production-ready governance controls for LangGraph and multi-agent workflows.
+A Python/FastAPI evaluation service for agent run traces, designed around the governance needs of LangGraph and multi-agent workflows. Deterministic policy results remain separate from optional LLM-generated remediation advice.
+
+## Problem and architecture
+
+Agent runs need inspectable checks for restricted tools, missing approvals, model choices, step budgets, and costs. This service evaluates the submitted trace and returns structured findings.
+
+```mermaid
+flowchart LR
+  A[Policy + submitted run trace] --> B[FastAPI validation]
+  B --> C[Deterministic rule engine]
+  C --> D[Violations + recommendations]
+  D -. optional .-> E[LLM remediation advice]
+```
+
+**Design choices:** Rules decide compliance; generative advice cannot override them. Evaluation can run singly or in batches. The trace carries tool/model/approval state; this service does not execute agents or maintain their graph state.
+
+**Stack:** Python, FastAPI, Requests, pytest, Docker. LangGraph is the intended integration context, not an installed runtime dependency or an implemented graph runner.
 
 ## What this service provides
 
@@ -69,8 +84,25 @@ You can start from `.env.example` and override values per environment.
 ## Testing and quality
 
 ```bash
-pytest -q
-flake8 .
+python -m pip install -r requirements-dev.txt
+python -m pytest -q
+python -m flake8 .
 ```
 
 CI runs on push/PR and executes lint + tests on Python 3.10 and 3.11.
+
+## Evaluation, limitations, and roadmap
+
+The test suite covers policy validation, deterministic violations, API responses, and rate limiting. See [evaluation](docs/evaluation.md) for the evaluation approach and [design](docs/design.md) for service boundaries.
+
+- Evaluation relies on submitted trace metadata, including recorded approvals and costs.
+- A compliant trace is not proof of truthful model output or safe real-world behavior.
+- This service does not intercept tool calls, enforce permissions during execution, or run a multi-agent graph. Enforcement must be integrated with the caller.
+- Optional LLM advice is advisory and depends on an upstream endpoint.
+- In-memory limits and optional API keys do not establish production readiness.
+
+Future integration work includes connecting checks to an executing graph and validating failure paths with representative traces. These are next steps, not implemented capabilities. Deployment considerations are in [operations](docs/operations.md) and [security](docs/security.md).
+
+## License
+
+See [LICENSE](LICENSE) for the repository license.
